@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rutina Gym</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0F;--surface:#13131A;--card:#1C1C26;--border:#2A2A38;
+  --accent:#C8FF00;--accent2:#FF6B35;--text:#F0F0F8;--muted:#6B6B80;
+  --green:#22C55E;--red:#EF4444;--blue:#60A5FA;
+  --shadow:0 4px 24px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:16px 20px;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;color:var(--accent);line-height:1}
+.logo span{color:var(--muted);font-size:.9rem;display:block;letter-spacing:1px;font-family:'DM Sans',sans-serif;font-weight:400;margin-top:-2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.week-badge{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:.78rem;color:var(--muted);font-weight:500}
+
+/* DAY TABS */
+.day-tabs{
+  display:flex;overflow-x:auto;gap:0;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tab{
+  flex:1;min-width:80px;padding:12px 8px;text-align:center;cursor:pointer;
+  border-bottom:3px solid transparent;transition:all .2s;
+  font-size:.8rem;font-weight:600;color:var(--muted);white-space:nowrap;
+  user-select:none;
+}
+.day-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.day-tab:hover:not(.active){color:var(--text)}
+.day-abbr{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;display:block;letter-spacing:1px}
+
+/* MAIN */
+main{max-width:680px;margin:0 auto;padding:20px 16px 80px}
+
+/* DAY VIEW */
+.day-panel{display:none}
+.day-panel.active{display:block}
+
+/* WARMUP */
+.section-label{
+  font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;
+  color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.warmup-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;margin-bottom:22px;
+}
+.warmup-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid var(--border);font-size:.85rem;
+}
+.warmup-item:last-child{border-bottom:none}
+.warmup-name{color:var(--text)}
+.warmup-detail{color:var(--muted);font-size:.78rem}
+
+/* EXERCISE CARDS */
+.exercises{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+
+.ex-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;transition:border-color .2s;
+}
+.ex-card.done{border-color:var(--green)}
+
+.ex-header{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;
+}
+.muscle-tag{
+  font-size:.68rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
+  padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0;
+}
+.ex-name{font-size:.95rem;font-weight:600;flex:1;line-height:1.2}
+.ex-meta{font-size:.75rem;color:var(--muted);margin-top:2px}
+.ex-check{
+  width:26px;height:26px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;
+  flex-shrink:0;transition:all .2s;
+}
+.ex-card.done .ex-check{background:var(--green);border-color:var(--green);color:#000}
+
+/* SETS TABLE */
+.sets-body{padding:0 16px 14px;display:none}
+.ex-card.open .sets-body{display:block}
+
+.sets-header{
+  display:grid;grid-template-columns:32px 1fr 1fr 36px;gap:6px;
+  font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;
+  padding:4px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;
+}
+.set-row{
+  display:grid;grid-template-columns:32px 1fr 1fr 36px;gap:6px;
+  align-items:center;margin-bottom:7px;
+}
+.set-num{
+  font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--muted);text-align:center;
+}
+.set-row.completed .set-num{color:var(--accent)}
+
+.set-input{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:.9rem;
+  color:var(--text);width:100%;text-align:center;outline:none;
+  transition:border-color .2s;-moz-appearance:textfield;
+}
+.set-input::-webkit-inner-spin-button,.set-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.set-input:focus{border-color:var(--accent)}
+.set-row.completed .set-input{border-color:var(--green);background:rgba(34,197,94,.08)}
+
+.btn-set-done{
+  background:none;border:1.5px solid var(--border);border-radius:8px;
+  width:36px;height:36px;cursor:pointer;color:var(--muted);font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.btn-set-done:hover{border-color:var(--green);color:var(--green)}
+.set-row.completed .btn-set-done{background:var(--green);border-color:var(--green);color:#000}
+
+.sets-progress{
+  display:flex;gap:4px;margin-top:10px;
+}
+.progress-dot{
+  flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;
+}
+.progress-dot.done{background:var(--accent)}
+
+/* CARDIO */
+.cardio-card{
+  background:linear-gradient(135deg,rgba(200,255,0,.06),rgba(200,255,0,.02));
+  border:1px solid rgba(200,255,0,.2);border-radius:14px;
+  padding:14px 16px;margin-top:4px;
+  display:flex;align-items:center;gap:12px;
+}
+.cardio-icon{font-size:1.4rem}
+.cardio-text{font-size:.9rem;color:var(--accent);font-weight:600}
+.cardio-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+/* DAY SUMMARY */
+.day-summary{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin-top:20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.summary-stat{text-align:center}
+.summary-stat .val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--accent);line-height:1}
+.summary-stat .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+
+.btn-finish{
+  padding:12px 24px;background:var(--accent);color:#000;border:none;
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:opacity .2s;
+}
+.btn-finish:hover{opacity:.85}
+.btn-finish:disabled{opacity:.4;cursor:not-allowed}
+
+/* HISTORY */
+.hist-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;margin-bottom:10px;
+}
+.hist-card h4{font-size:.85rem;font-weight:600;margin-bottom:8px;color:var(--accent)}
+.hist-row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);padding:3px 0}
+.hist-row span:last-child{color:var(--text);font-weight:500}
+
+/* MUSCLE COLORS */
+.tag-pecho{background:rgba(96,165,250,.15);color:#60A5FA}
+.tag-espalda{background:rgba(167,139,250,.15);color:#A78BFA}
+.tag-hombros{background:rgba(251,191,36,.15);color:#FBBf24}
+.tag-biceps{background:rgba(52,211,153,.15);color:#34D399}
+.tag-triceps{background:rgba(255,107,53,.15);color:#FF6B35}
+.tag-cuadriceps{background:rgba(244,63,94,.15);color:#F43F5E}
+.tag-gluteo{background:rgba(236,72,153,.15);color:#EC4899}
+.tag-posterior{background:rgba(20,184,166,.15);color:#14B8A6}
+.tag-core{background:rgba(200,255,0,.15);color:#C8FF00}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow);transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* PERSONAL RECORDS */
+.pr-badge{
+  font-size:.65rem;background:rgba(200,255,0,.15);color:var(--accent);
+  border-radius:4px;padding:2px 5px;font-weight:700;letter-spacing:.5px;margin-left:6px;
+}
+
+@media(max-width:480px){
+  .sets-header,.set-row{grid-template-columns:28px 1fr 1fr 34px}
+  .btn-set-done{width:34px;height:34px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    💪 GymLog
+    <span>Upper / Lower Split</span>
+  </div>
+  <div class="header-right">
+    <div class="week-badge" id="week-badge">Semana 1</div>
+  </div>
+</header>
+
+<div class="day-tabs" id="day-tabs"></div>
+
+<main id="main-content"></main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  RUTINA DATA
+// ═══════════════════════════════════════════════════════
+const RUTINA = {
+  Lunes: {
+    warmup: [
+      {name:"Rotaciones de hombro", detail:"1 serie · 20s"},
+      {name:"Band Pull Aparts",      detail:"1 serie · 20s"},
+      {name:"Flexiones Inclinadas",  detail:"3×10 · 20s"},
+    ],
+    exercises: [
+      {muscle:"Pecho",      name:"Press banca plano",              sets:4, reps:8,  rest:"1min", defaultWeight:44},
+      {muscle:"Pecho",      name:"Press Inclinado con mancuerna",  sets:4, reps:10, rest:"1min", defaultWeight:30},
+      {muscle:"Espalda",    name:"Jalón al pecho",                 sets:4, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Espalda",    name:"Remo en máquina",                sets:4, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Pecho",      name:"Apertura en máquina",            sets:3, reps:12, rest:"1min", defaultWeight:77},
+      {muscle:"Espalda",    name:"Pullover con polea",             sets:3, reps:12, rest:"1min", defaultWeight:null},
+    ],
+    cardio: "10 min caminadora inclinada",
+  },
+  Martes: {
+    warmup: [
+      {name:"Extensiones ligeras",  detail:"3×15 · 20s"},
+      {name:"Sentadilla sin peso",  detail:"2×10 · 20s"},
+      {name:"Puente de glúteo",     detail:"2×15 · 20s"},
+    ],
+    exercises: [
+      {muscle:"Cuádriceps", name:"Sentadilla con barra",   sets:4, reps:6,  rest:"2min", defaultWeight:176},
+      {muscle:"Cuádriceps", name:"Prensa",                 sets:4, reps:10, rest:"1min", defaultWeight:88},
+      {muscle:"Cuádriceps", name:"Hack squat",             sets:3, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Glúteo",     name:"Peso muerto rumano",     sets:3, reps:10, rest:"1min", defaultWeight:66},
+      {muscle:"Posterior",  name:"Curl femoral acostado",  sets:3, reps:12, rest:"1min", defaultWeight:null},
+      {muscle:"Cuádriceps", name:"Extensión cuádriceps",   sets:3, reps:15, rest:"1min", defaultWeight:null},
+    ],
+    cardio: "10 min caminadora inclinada",
+  },
+  Miércoles: {
+    warmup: [
+      {name:"Rotaciones de hombro",      detail:"1 serie · 20s"},
+      {name:"Face pulls banda",           detail:"2×15 · 20s"},
+      {name:"Elevaciones laterales lig.", detail:"2×15 · 20s"},
+    ],
+    exercises: [
+      {muscle:"Hombros",  name:"Press sentado mancuerna",      sets:4, reps:8,  rest:"1min", defaultWeight:77},
+      {muscle:"Espalda",  name:"Remo con barra",               sets:4, reps:8,  rest:"1min", defaultWeight:null},
+      {muscle:"Hombros",  name:"Elevaciones laterales",        sets:4, reps:12, rest:"1min", defaultWeight:25},
+      {muscle:"Bíceps",   name:"Curl con barra",               sets:3, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Tríceps",  name:"Extensión tríceps en polea",   sets:3, reps:10, rest:"1min", defaultWeight:88},
+      {muscle:"Bíceps",   name:"Curl con martillo",            sets:3, reps:12, rest:"1min", defaultWeight:77},
+      {muscle:"Tríceps",  name:"Press cerrado",                sets:3, reps:12, rest:"1min", defaultWeight:44},
+      {muscle:"Hombros",  name:"Pájaros",                      sets:3, reps:15, rest:"1min", defaultWeight:null},
+      {muscle:"Core",     name:"Plancha",                      sets:3, reps:30, rest:"45s",  defaultWeight:null},
+      {muscle:"Core",     name:"Elevaciones de piernas",       sets:3, reps:12, rest:"45s",  defaultWeight:null},
+    ],
+    cardio: null,
+  },
+  Jueves: {
+    warmup: [
+      {name:"Caminata inclinada",  detail:"10 min"},
+      {name:"Puente de glúteo",    detail:"2×15 · 20s"},
+      {name:"Curl femoral ligero", detail:"2×10 · 20s"},
+    ],
+    exercises: [
+      {muscle:"Glúteo",    name:"Hip thrust",          sets:4, reps:8,  rest:"1min", defaultWeight:176},
+      {muscle:"Glúteo",    name:"Prensa (pies altos)", sets:4, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Posterior", name:"Peso muerto rumano",  sets:3, reps:10, rest:"1min", defaultWeight:66},
+      {muscle:"Posterior", name:"Hiperextensiones",    sets:3, reps:12, rest:"1min", defaultWeight:30},
+      {muscle:"Glúteo",    name:"Sentadilla búlgara",  sets:3, reps:10, rest:"1min", defaultWeight:20},
+      {muscle:"Glúteo",    name:"Abducción de cadera", sets:3, reps:15, rest:"1min", defaultWeight:null},
+      {muscle:"Core",      name:"Crunch",              sets:3, reps:15, rest:"45s",  defaultWeight:null},
+    ],
+    cardio: "10 min caminadora inclinada",
+  },
+  Viernes: {
+    warmup: [
+      {name:"Rotaciones de hombro", detail:"1 serie · 20s"},
+      {name:"Band Pull Aparts",      detail:"1 serie · 20s"},
+      {name:"Flexiones Inclinadas",  detail:"3×10 · 20s"},
+    ],
+    exercises: [
+      {muscle:"Pecho",   name:"Press banca plano",             sets:4, reps:8,  rest:"1min", defaultWeight:44},
+      {muscle:"Pecho",   name:"Press Inclinado con mancuerna", sets:4, reps:10, rest:"1min", defaultWeight:30},
+      {muscle:"Espalda", name:"Jalón al pecho",                sets:4, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Espalda", name:"Remo en máquina",               sets:4, reps:10, rest:"1min", defaultWeight:null},
+      {muscle:"Pecho",   name:"Apertura en máquina",           sets:3, reps:12, rest:"1min", defaultWeight:77},
+      {muscle:"Espalda", name:"Pullover con polea",            sets:3, reps:12, rest:"1min", defaultWeight:null},
+    ],
+    cardio: "10 min caminadora inclinada",
+  },
+};
+
+const DAYS = Object.keys(RUTINA);
+const MUSCLE_TAG = {
+  "Pecho":"tag-pecho","Espalda":"tag-espalda","Hombros":"tag-hombros",
+  "Bíceps":"tag-biceps","Tríceps":"tag-triceps","Cuádriceps":"tag-cuadriceps",
+  "Glúteo":"tag-gluteo","Posterior":"tag-posterior","Core":"tag-core",
+};
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let activeDay = DAYS[new Date().getDay()-1] || DAYS[0];
+// sessions: { "2026-05-02_Lunes": { exIdx: { sets:[{weight,reps,done}] } } }
+let sessions = JSON.parse(localStorage.getItem('gym_sessions')||'{}');
+let currentSession = null; // key for today
+
+function todayKey(day){ return new Date().toISOString().slice(0,10)+'_'+day; }
+function save(){ localStorage.setItem('gym_sessions', JSON.stringify(sessions)); }
+
+// ═══════════════════════════════════════════════════════
+//  WEEK BADGE
+// ═══════════════════════════════════════════════════════
+function updateWeekBadge(){
+  const start = new Date('2026-06-15');
+  const now = new Date();
+  const diff = Math.max(0, Math.floor((now-start)/(7*86400000)))+1;
+  document.getElementById('week-badge').textContent = 'Semana '+diff;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PERSONAL RECORDS
+// ═══════════════════════════════════════════════════════
+function getPR(day, exIdx){
+  let best = 0;
+  Object.entries(sessions).forEach(([key, dayData])=>{
+    if(!key.endsWith('_'+day)) return;
+    const exData = dayData[exIdx];
+    if(!exData) return;
+    exData.sets.forEach(s=>{ if(s.done && s.weight > best) best = s.weight; });
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+//  BUILD SESSION FOR TODAY
+// ═══════════════════════════════════════════════════════
+function getOrCreateSession(day){
+  const key = todayKey(day);
+  if(!sessions[key]){
+    sessions[key] = {};
+    const exs = RUTINA[day].exercises;
+    exs.forEach((ex,i)=>{
+      const sets = [];
+      for(let s=0;s<ex.sets;s++){
+        sets.push({weight: ex.defaultWeight||'', reps: ex.reps, done:false});
+      }
+      sessions[key][i] = {sets, allDone:false};
+    });
+    save();
+  }
+  return key;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function renderTabs(){
+  const container = document.getElementById('day-tabs');
+  container.innerHTML = DAYS.map(day=>`
+    <div class="day-tab ${day===activeDay?'active':''}" onclick="switchDay('${day}')">
+      <span class="day-abbr">${day.slice(0,3).toUpperCase()}</span>
+      ${day}
+    </div>
+  `).join('');
+}
+
+function muscleTag(m){
+  const cls = MUSCLE_TAG[m]||'tag-core';
+  return `<span class="muscle-tag ${cls}">${m}</span>`;
+}
+
+function renderDay(day){
+  const data = RUTINA[day];
+  const sessionKey = getOrCreateSession(day);
+  const sessionData = sessions[sessionKey];
+
+  // Warmup
+  const warmupHTML = `
+    <div class="section-label">🔥 Calentamiento</div>
+    <div class="warmup-card">
+      ${data.warmup.map(w=>`
+        <div class="warmup-item">
+          <span class="warmup-name">${w.name}</span>
+          <span class="warmup-detail">${w.detail}</span>
+        </div>`).join('')}
+    </div>`;
+
+  // Exercises
+  const exHTML = data.exercises.map((ex,i)=>{
+    const exData = sessionData[i];
+    const allSetsDone = exData.sets.every(s=>s.done);
+    const pr = getPR(day, i);
+
+    const setsRows = exData.sets.map((set,si)=>`
+      <div class="set-row ${set.done?'completed':''}" id="set-${i}-${si}">
+        <div class="set-num">${si+1}</div>
+        <input class="set-input" type="number" placeholder="lb"
+          value="${set.weight!==''?set.weight:''}"
+          onchange="updateSet('${sessionKey}',${i},${si},'weight',this.value)"
+          onclick="this.select()">
+        <input class="set-input" type="number" placeholder="reps"
+          value="${set.reps}"
+          onchange="updateSet('${sessionKey}',${i},${si},'reps',this.value)"
+          onclick="this.select()">
+        <button class="btn-set-done" onclick="toggleSet('${sessionKey}',${i},${si})">${set.done?'✓':'○'}</button>
+      </div>`).join('');
+
+    const dots = exData.sets.map((_,si)=>`<div class="progress-dot ${exData.sets[si].done?'done':''}" id="dot-${i}-${si}"></div>`).join('');
+
+    const prBadge = pr>0 ? `<span class="pr-badge">PR: ${pr} lb</span>` : '';
+
+    return `
+      <div class="ex-card ${allSetsDone?'done':''}" id="ex-card-${i}">
+        <div class="ex-header" onclick="toggleCard(${i})">
+          ${muscleTag(ex.muscle)}
+          <div style="flex:1;min-width:0">
+            <div class="ex-name">${ex.name}${prBadge}</div>
+            <div class="ex-meta">${ex.sets} series · ${ex.reps} reps · Descanso ${ex.rest}</div>
+          </div>
+          <div class="ex-check" id="ex-check-${i}">${allSetsDone?'✓':''}</div>
+        </div>
+        <div class="sets-body">
+          <div class="sets-header">
+            <div style="text-align:center">#</div>
+            <div style="text-align:center">Peso (lb)</div>
+            <div style="text-align:center">Reps</div>
+            <div></div>
+          </div>
+          ${setsRows}
+          <div class="sets-progress">${dots}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Cardio
+  const cardioHTML = data.cardio ? `
+    <div class="cardio-card">
+      <div class="cardio-icon">🏃</div>
+      <div>
+        <div class="cardio-text">${data.cardio}</div>
+        <div class="cardio-sub">Cardio al final del entrenamiento</div>
+      </div>
+    </div>` : '';
+
+  // Summary
+  const totalSets = data.exercises.reduce((a,e)=>a+e.sets,0);
+  const doneSets  = Object.values(sessionData).reduce((a,ed)=>a+ed.sets.filter(s=>s.done).length,0);
+  const totalVol  = Object.values(sessionData).reduce((a,ed)=>a+ed.sets.filter(s=>s.done&&s.weight).reduce((b,s)=>b+(Number(s.weight)||0)*(Number(s.reps)||0),0),0);
+
+  const summaryHTML = `
+    <div class="day-summary">
+      <div class="summary-stat"><div class="val">${doneSets}/${totalSets}</div><div class="lbl">Series</div></div>
+      <div class="summary-stat"><div class="val">${totalVol.toLocaleString()}</div><div class="lbl">Vol. lb</div></div>
+      <div class="summary-stat"><div class="val">${data.exercises.length}</div><div class="lbl">Ejercicios</div></div>
+      <button class="btn-finish" onclick="finishDay('${sessionKey}')" ${doneSets===0?'disabled':''}>
+        ${doneSets===totalSets?'✓ Completado':'Guardar sesión'}
+      </button>
+    </div>`;
+
+  return `
+    ${warmupHTML}
+    <div class="section-label">🏋️ Ejercicios</div>
+    <div class="exercises">${exHTML}</div>
+    ${cardioHTML}
+    ${summaryHTML}`;
+}
+
+function render(){
+  renderTabs();
+  document.getElementById('main-content').innerHTML = renderDay(activeDay);
+  // Auto-open first uncompleted exercise
+  const sessionKey = todayKey(activeDay);
+  const sessionData = sessions[sessionKey]||{};
+  const firstOpen = Object.entries(sessionData).find(([i,ed])=>!ed.sets.every(s=>s.done));
+  if(firstOpen){
+    const card = document.getElementById('ex-card-'+firstOpen[0]);
+    if(card) card.classList.add('open');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INTERACTIONS
+// ═══════════════════════════════════════════════════════
+function switchDay(day){
+  activeDay = day;
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleCard(exIdx){
+  const card = document.getElementById('ex-card-'+exIdx);
+  card.classList.toggle('open');
+}
+
+function updateSet(sessionKey, exIdx, setIdx, field, value){
+  sessions[sessionKey][exIdx].sets[setIdx][field] = field==='weight'||field==='reps' ? (value===''?'':Number(value)) : value;
+  save();
+  refreshSummary(sessionKey);
+}
+
+function toggleSet(sessionKey, exIdx, setIdx){
+  const set = sessions[sessionKey][exIdx].sets[setIdx];
+  set.done = !set.done;
+  save();
+
+  // Update set row UI
+  const row = document.getElementById(`set-${exIdx}-${setIdx}`);
+  if(row){
+    row.classList.toggle('completed', set.done);
+    const btn = row.querySelector('.btn-set-done');
+    if(btn) btn.textContent = set.done?'✓':'○';
+  }
+
+  // Update dot
+  const dot = document.getElementById(`dot-${exIdx}-${setIdx}`);
+  if(dot) dot.classList.toggle('done', set.done);
+
+  // Check if all sets for this exercise done
+  const allDone = sessions[sessionKey][exIdx].sets.every(s=>s.done);
+  const card = document.getElementById('ex-card-'+exIdx);
+  const check = document.getElementById('ex-check-'+exIdx);
+  if(card){ card.classList.toggle('done', allDone); }
+  if(check){ check.textContent = allDone?'✓':''; }
+
+  // Auto-open next exercise
+  if(allDone){
+    const nextCard = document.getElementById('ex-card-'+(exIdx+1));
+    if(nextCard){ nextCard.classList.add('open'); nextCard.scrollIntoView({behavior:'smooth',block:'center'}); }
+    if(card) card.classList.remove('open');
+    showToast('💪 Ejercicio completado');
+  }
+
+  refreshSummary(sessionKey);
+  checkPR(exIdx, setIdx, sessionKey);
+}
+
+function checkPR(exIdx, setIdx, sessionKey){
+  const set = sessions[sessionKey][exIdx].sets[setIdx];
+  if(!set.done || !set.weight) return;
+  const day = activeDay;
+  let prevBest = 0;
+  Object.entries(sessions).forEach(([key, dayData])=>{
+    if(key===sessionKey || !key.endsWith('_'+day)) return;
+    const ed = dayData[exIdx];
+    if(!ed) return;
+    ed.sets.forEach(s=>{ if(s.done && s.weight > prevBest) prevBest = Number(s.weight); });
+  });
+  if(set.weight > prevBest && prevBest > 0){
+    showToast('🏆 ¡Nuevo récord personal! '+set.weight+' lb');
+  }
+}
+
+function refreshSummary(sessionKey){
+  const data = RUTINA[activeDay];
+  const sessionData = sessions[sessionKey]||{};
+  const totalSets = data.exercises.reduce((a,e)=>a+e.sets,0);
+  const doneSets  = Object.values(sessionData).reduce((a,ed)=>a+ed.sets.filter(s=>s.done).length,0);
+  const totalVol  = Object.values(sessionData).reduce((a,ed)=>a+ed.sets.filter(s=>s.done&&s.weight).reduce((b,s)=>b+(Number(s.weight)||0)*(Number(s.reps)||0),0),0);
+
+  const summary = document.querySelector('.day-summary');
+  if(!summary) return;
+  const vals = summary.querySelectorAll('.val');
+  if(vals[0]) vals[0].textContent = `${doneSets}/${totalSets}`;
+  if(vals[1]) vals[1].textContent = totalVol.toLocaleString();
+  const btn = summary.querySelector('.btn-finish');
+  if(btn){
+    btn.disabled = doneSets===0;
+    btn.textContent = doneSets===totalSets?'✓ Completado':'Guardar sesión';
+  }
+}
+
+function finishDay(sessionKey){
+  save();
+  showToast('🎉 Sesión guardada correctamente');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  // Set active day based on current weekday
+  const wd = new Date().getDay(); // 0=Sun,1=Mon...5=Fri,6=Sat
+  const dayMap = {1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes'};
+  activeDay = dayMap[wd] || 'Lunes';
+  updateWeekBadge();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
